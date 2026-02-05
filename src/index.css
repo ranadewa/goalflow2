@@ -1972,3 +1972,485 @@ h1 {
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+
+/* =============================================
+   PHASE 3: RESPONSIVE DESIGN
+   Append to end of index.css
+   ============================================= */
+
+/* ==================== */
+/* Mobile-First Fixes   */
+/* ==================== */
+
+/* Prevent text selection on interactive elements */
+.daily-habit,
+.habit-item,
+.nav-item,
+.btn,
+.icon-option,
+.color-option {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent pull-to-refresh when not at top */
+body {
+  overscroll-behavior-y: contain;
+}
+
+/* ==================== */
+/* Touch Target Sizes   */
+/* ==================== */
+
+/* Minimum 44px touch targets (Apple HIG) */
+.daily-habit {
+  min-height: 48px;
+}
+
+.daily-checkbox,
+.habit-checkbox {
+  min-width: 44px;
+  min-height: 44px;
+  width: 28px;
+  height: 28px;
+}
+
+.btn-icon,
+.btn-icon-small {
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-item {
+  min-height: 48px;
+  padding: 8px 16px;
+}
+
+/* ==================== */
+/* Small Screen (<400px) */
+/* ==================== */
+
+@media (max-width: 400px) {
+  /* Tighter auth card padding */
+  .auth-card {
+    padding: 24px 20px;
+  }
+
+  .auth-logo {
+    font-size: 40px;
+  }
+
+  .auth-header h1 {
+    font-size: 20px;
+  }
+
+  /* Smaller score card */
+  .score-card {
+    padding: 20px;
+  }
+
+  .score-current {
+    font-size: 40px;
+  }
+
+  .score-target {
+    font-size: 18px;
+  }
+
+  /* Stack range quick options */
+  .range-quick-options {
+    flex-wrap: wrap;
+  }
+
+  .range-quick-options button {
+    flex: 1 1 45%;
+  }
+
+  /* Stack custom date range */
+  .range-custom {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .range-custom .btn {
+    width: 100%;
+  }
+
+  /* Smaller summary stats */
+  .summary-value {
+    font-size: 20px;
+  }
+
+  .summary-label {
+    font-size: 11px;
+  }
+}
+
+/* ==================== */
+/* Header Responsive    */
+/* ==================== */
+
+/* Truncate long email on small screens */
+.user-email {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 360px) {
+  .user-email {
+    display: none;
+  }
+
+  .app-header h1 {
+    font-size: 16px;
+  }
+}
+
+/* ==================== */
+/* Modal Responsive     */
+/* ==================== */
+
+@media (max-width: 480px) {
+  .modal-backdrop {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modal {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 20px 20px 0 0;
+    animation: slideUpMobile 0.3s ease;
+  }
+
+  @keyframes slideUpMobile {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .modal-header {
+    padding: 16px 20px;
+  }
+
+  .modal-body {
+    padding: 20px;
+    max-height: calc(90vh - 140px);
+    overflow-y: auto;
+  }
+
+  .modal-footer {
+    padding: 16px 20px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Full-width modal buttons on mobile */
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
+
+  /* Larger touch targets for icon picker */
+  .icon-option {
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+  }
+
+  .color-option {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* ==================== */
+/* Page Header Bar      */
+/* ==================== */
+
+.page-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 400px) {
+  .page-header-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .page-header-bar .btn {
+    width: 100%;
+  }
+
+  .page-header-bar h2 {
+    font-size: 20px;
+  }
+}
+
+/* ==================== */
+/* History Page Fixes   */
+/* ==================== */
+
+@media (max-width: 480px) {
+  .range-summary {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .summary-stat {
+    flex: 1 1 30%;
+    min-width: 80px;
+  }
+
+  /* Day card adjustments */
+  .day-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+/* ==================== */
+/* Daily Reflections    */
+/* ==================== */
+
+@media (max-width: 400px) {
+  .reflections-card textarea {
+    min-height: 80px;
+  }
+}
+
+/* ==================== */
+/* Landscape Mode       */
+/* ==================== */
+
+@media (max-height: 500px) and (orientation: landscape) {
+  /* Reduce header height */
+  .app-header {
+    padding: 8px 16px;
+  }
+
+  /* Smaller bottom nav */
+  .bottom-nav {
+    padding: 4px 0;
+  }
+
+  .nav-item {
+    padding: 4px 16px;
+  }
+
+  .nav-icon {
+    font-size: 18px;
+  }
+
+  .nav-label {
+    font-size: 10px;
+  }
+
+  /* Less padding on main content */
+  .app-main {
+    padding-bottom: 56px;
+  }
+
+  /* Smaller modals */
+  .modal {
+    max-height: 95vh;
+  }
+}
+
+/* ==================== */
+/* Tablet Enhancements  */
+/* ==================== */
+
+@media (min-width: 768px) {
+  /* Wider content area on tablets */
+  .dashboard-content,
+  .habits-page,
+  .history-page {
+    max-width: 700px;
+  }
+
+  /* Two-column habit layout */
+  .daily-habits {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  /* Restore row layout for modal footer */
+  .modal-footer {
+    flex-direction: row;
+  }
+
+  .modal-footer .btn {
+    width: auto;
+  }
+}
+
+/* ==================== */
+/* Desktop/Large Screen */
+/* ==================== */
+
+@media (min-width: 1024px) {
+  /* Hide bottom nav, show side nav would go here */
+  /* For now, just center and enhance */
+
+  .dashboard-content,
+  .habits-page,
+  .history-page {
+    max-width: 800px;
+    padding: 0 24px;
+  }
+
+  /* Larger touch targets less critical on desktop */
+  .daily-checkbox,
+  .habit-checkbox {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+  }
+}
+
+/* ==================== */
+/* Dark Mode Support    */
+/* ==================== */
+
+@media (prefers-color-scheme: dark) {
+  /* Only apply if user hasn't set a preference */
+  /* This is a basic dark mode - can be expanded */
+
+  /*
+  :root {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --border-color: #334155;
+  }
+
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+  }
+  */
+}
+
+/* ==================== */
+/* Reduced Motion       */
+/* ==================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ==================== */
+/* Print Styles         */
+/* ==================== */
+
+@media print {
+  .app-header,
+  .bottom-nav,
+  .modal-backdrop,
+  .connection-indicator,
+  .update-prompt {
+    display: none !important;
+  }
+
+  .app-main {
+    padding-bottom: 0;
+  }
+
+  .dashboard-content,
+  .habits-page,
+  .history-page {
+    max-width: 100%;
+  }
+}
+
+/* ==================== */
+/* Safe Areas (Notch)   */
+/* ==================== */
+
+@supports (padding-top: env(safe-area-inset-top)) {
+  .app-header {
+    padding-top: calc(12px + env(safe-area-inset-top));
+  }
+
+  .bottom-nav {
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  }
+
+  .app-main {
+    padding-bottom: calc(70px + env(safe-area-inset-bottom));
+  }
+
+  /* Modal safe areas */
+  .modal-backdrop {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* ==================== */
+/* Pixel-Specific Fixes */
+/* ==================== */
+
+/* Fix for Android keyboard pushing content */
+@media (max-height: 600px) {
+  .auth-container {
+    align-items: flex-start;
+    padding-top: 20px;
+  }
+
+  .modal-backdrop {
+    align-items: flex-start;
+    padding-top: 10px;
+  }
+
+  .modal {
+    max-height: calc(100vh - 20px);
+    border-radius: 16px;
+  }
+}
+
+/* High DPI screens - crisper borders */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .daily-category,
+  .habits-category,
+  .score-card,
+  .modal,
+  .auth-card {
+    border: 0.5px solid rgba(0, 0, 0, 0.1);
+  }
+}
