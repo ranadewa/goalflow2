@@ -1,0 +1,143 @@
+/* =============================================
+   PWA STYLES - Append to end of index.css
+   ============================================= */
+
+/* Offline Indicator */
+.connection-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  animation: slideDown 0.3s ease-out;
+}
+
+.connection-indicator.offline {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #78350f;
+}
+
+.connection-indicator.online {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  color: #064e3b;
+  animation: slideDown 0.3s ease-out, fadeOut 0.3s ease-out 2.5s forwards;
+}
+
+.connection-indicator .indicator-icon {
+  font-size: 16px;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* Update Prompt */
+.update-prompt {
+  position: fixed;
+  bottom: 80px; /* Above bottom nav */
+  left: 16px;
+  right: 16px;
+  z-index: 9998;
+  animation: slideUp 0.4s ease-out;
+}
+
+.update-content {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: white;
+  padding: 16px 20px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.update-icon {
+  font-size: 24px;
+}
+
+.update-text {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.update-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.update-btn:hover {
+  background: #2563eb;
+}
+
+.update-dismiss {
+  background: transparent;
+  color: #94a3b8;
+  border: none;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.update-dismiss:hover {
+  color: white;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Adjust layout when offline banner is showing */
+.app-layout:has(.connection-indicator.offline) .app-header {
+  margin-top: 44px;
+}
+
+/* Safe area insets for notched phones */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .connection-indicator {
+    padding-top: calc(12px + env(safe-area-inset-top));
+  }
+  
+  .bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
