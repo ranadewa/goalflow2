@@ -1,11 +1,16 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import OfflineIndicator from './OfflineIndicator'
+import UpdatePrompt from './UpdatePrompt'
 
 export default function Layout({ children }) {
   const { user, signOut } = useAuth()
 
   return (
     <div className="app-layout">
+      <OfflineIndicator />
+      <UpdatePrompt />
+      
       <header className="app-header">
         <div className="header-left">
           <h1>🎯 GoalFlow</h1>
