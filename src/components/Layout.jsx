@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import OfflineIndicator from './OfflineIndicator'
 import UpdatePrompt from './UpdatePrompt'
+import InstallPrompt from './InstallPrompt'
 
 export default function Layout({ children }) {
   const { user, signOut } = useAuth()
@@ -10,6 +11,7 @@ export default function Layout({ children }) {
     <div className="app-layout">
       <OfflineIndicator />
       <UpdatePrompt />
+      <InstallPrompt />
       
       <header className="app-header">
         <div className="header-left">
