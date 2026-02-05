@@ -1,17 +1,40 @@
-import { NavLink } from 'react-router-dom'
+import { useState } from 'react'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import OfflineIndicator from './OfflineIndicator'
-import UpdatePrompt from './UpdatePrompt'
-import InstallPrompt from './InstallPrompt'
+import { clearDeviceCredentials, hasDeviceCredentials } from '../lib/deviceStorage.js'
+
+// Optional imports - only if you've added Phase 4 components
+// import OfflineIndicator from './OfflineIndicator'
+// import UpdatePrompt from './UpdatePrompt'
+// import InstallPrompt from './InstallPrompt'
 
 export default function Layout({ children }) {
   const { user, signOut } = useAuth()
+  const navigate = useNavigate()
+  const [showMenu, setShowMenu] = useState(false)
+
+  const isRemembered = user && hasDeviceCredentials(user.id)
+
+  async function handleSignOut() {
+    setShowMenu(false)
+    await signOut()
+    navigate('/login')
+  }
+
+  function handleForgetDevice() {
+    if (confirm('This will require your passphrase next time you log in. Continue?')) {
+      clearDeviceCredentials()
+      setShowMenu(false)
+    }
+  }
 
   return (
     <div className="app-layout">
+      {/* Uncomment if you have Phase 2+ components:
       <OfflineIndicator />
       <UpdatePrompt />
       <InstallPrompt />
+      */}
       
       <header className="app-header">
         <div className="header-left">
@@ -19,9 +42,34 @@ export default function Layout({ children }) {
         </div>
         <div className="header-right">
           <span className="user-email">{user.email}</span>
-          <button onClick={signOut} className="btn btn-secondary btn-small">
-            Sign Out
-          </button>
+          
+          <div className="header-menu-container">
+            <button 
+              className="btn btn-secondary btn-small menu-trigger"
+              onClick={() => setShowMenu(!showMenu)}
+              aria-label="Menu"
+            >
+              ☰
+            </button>
+            
+            {showMenu && (
+              <>
+                <div className="menu-backdrop" onClick={() => setShowMenu(false)} />
+                <div className="header-menu">
+                  {isRemembered && (
+                    <button className="menu-item" onClick={handleForgetDevice}>
+                      <span className="menu-icon">🔒</span>
+                      <span>Forget this device</span>
+                    </button>
+                  )}
+                  <button className="menu-item" onClick={handleSignOut}>
+                    <span className="menu-icon">🚪</span>
+                    <span>Sign out</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </header>
 

@@ -2990,3 +2990,140 @@ textarea,
   background: #c7d2fe;
   color: #1e1b4b;
 }
+/* =============================================
+   REMEMBER DEVICE STYLES
+   Append to end of index.css
+   ============================================= */
+
+/* Remember Device Checkbox */
+.remember-device {
+  margin: 20px 0;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.remember-device input {
+  width: 20px;
+  height: 20px;
+  accent-color: #6366f1;
+}
+
+.remember-device span {
+  font-size: 14px;
+  color: #374151;
+}
+
+/* Remember Warning */
+.remember-warning {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  line-height: 1.5;
+  border-left: 3px solid #f59e0b;
+}
+
+/* ==================== */
+/* Header Menu          */
+/* ==================== */
+
+.header-menu-container {
+  position: relative;
+}
+
+.menu-trigger {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+}
+
+.header-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  min-width: 200px;
+  z-index: 100;
+  overflow: hidden;
+  animation: menuFadeIn 0.15s ease;
+}
+
+@keyframes menuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-align: left;
+}
+
+.menu-item:hover {
+  background: #f3f4f6;
+}
+
+.menu-item:active {
+  background: #e5e7eb;
+}
+
+.menu-icon {
+  font-size: 16px;
+  width: 24px;
+  text-align: center;
+}
+
+/* Divider between menu items */
+.menu-item + .menu-item {
+  border-top: 1px solid #e5e7eb;
+}
+
+/* ==================== */
+/* Responsive Menu      */
+/* ==================== */
+
+@media (max-width: 400px) {
+  .header-menu {
+    position: fixed;
+    top: auto;
+    bottom: 70px;
+    left: 16px;
+    right: 16px;
+    border-radius: 16px;
+  }
+
+  .menu-item {
+    padding: 16px;
+  }
+}

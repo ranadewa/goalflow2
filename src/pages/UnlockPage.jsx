@@ -1,15 +1,53 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { deriveKey, verifyPassphrase } from '../lib/encryption'
+import { 
+  storeDeviceCredentials, 
+  getDeviceCredentials,
+  hasDeviceCredentials 
+} from '../lib/deviceStorage'
 
 export default function UnlockPage() {
   const navigate = useNavigate()
-  const { userSettings, setEncryptionKey, signOut } = useAuth()
+  const { user, userSettings, setEncryptionKey, signOut } = useAuth()
 
   const [passphrase, setPassphrase] = useState('')
+  const [rememberDevice, setRememberDevice] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [autoUnlocking, setAutoUnlocking] = useState(false)
+
+  // Try auto-unlock on mount if device is remembered
+  useEffect(() => {
+    if (user && userSettings && hasDeviceCredentials(user.id)) {
+      attemptAutoUnlock();
+    }
+  }, [user, userSettings]);
+
+  async function attemptAutoUnlock() {
+    const stored = getDeviceCredentials(user.id);
+    if (!stored) return;
+
+    setAutoUnlocking(true);
+
+    try {
+      const key = await deriveKey(stored.passphrase, userSettings.encryption_salt);
+      const isValid = await verifyPassphrase(key, userSettings.encryption_check);
+
+      if (isValid) {
+        setEncryptionKey(key);
+        navigate('/');
+      } else {
+        // Stored passphrase is invalid (maybe changed) - clear it
+        console.log('[Unlock] Stored passphrase invalid, clearing...');
+        setAutoUnlocking(false);
+      }
+    } catch (err) {
+      console.error('[Unlock] Auto-unlock failed:', err);
+      setAutoUnlocking(false);
+    }
+  }
 
   async function handleUnlock(e) {
     e.preventDefault()
@@ -24,7 +62,12 @@ export default function UnlockPage() {
       const isValid = await verifyPassphrase(key, userSettings.encryption_check)
 
       if (isValid) {
-        // 3. Store key and navigate
+        // 3. Store on device if requested
+        if (rememberDevice) {
+          storeDeviceCredentials(user.id, passphrase);
+        }
+
+        // 4. Store key and navigate
         setEncryptionKey(key)
         navigate('/')
       } else {
@@ -42,6 +85,24 @@ export default function UnlockPage() {
   async function handleSignOut() {
     await signOut()
     navigate('/login')
+  }
+
+  // Show loading while auto-unlocking
+  if (autoUnlocking) {
+    return (
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-header">
+            <span className="auth-logo">🔓</span>
+            <h1>Unlocking...</h1>
+            <p>Using remembered credentials</p>
+          </div>
+          <div className="loading-container" style={{ minHeight: 'auto', padding: '24px 0' }}>
+            <div className="spinner"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -68,6 +129,21 @@ export default function UnlockPage() {
               required
             />
           </div>
+
+          <label className="checkbox-label remember-device">
+            <input
+              type="checkbox"
+              checked={rememberDevice}
+              onChange={(e) => setRememberDevice(e.target.checked)}
+            />
+            <span>Remember on this device</span>
+          </label>
+
+          {rememberDevice && (
+            <div className="remember-warning">
+              ⚠️ Only use on your personal device. Anyone with access to this browser can view your data.
+            </div>
+          )}
 
           <button
             type="submit"
