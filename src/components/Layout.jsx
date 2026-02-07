@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useConfirm } from './ConfirmModal'
 import { clearDeviceCredentials, hasDeviceCredentials } from '../lib/deviceStorage.js'
 
 // Optional imports - only if you've added Phase 4 components
@@ -11,6 +12,7 @@ import { clearDeviceCredentials, hasDeviceCredentials } from '../lib/deviceStora
 export default function Layout({ children }) {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+  const confirm = useConfirm()
   const [showMenu, setShowMenu] = useState(false)
 
   const isRemembered = user && hasDeviceCredentials(user.id)
@@ -21,76 +23,80 @@ export default function Layout({ children }) {
     navigate('/login')
   }
 
-  function handleForgetDevice() {
-    if (confirm('This will require your passphrase next time you log in. Continue?')) {
+  async function handleForgetDevice() {
+    setShowMenu(false)
+    const ok = await confirm(
+        'This will require your passphrase next time you log in. Continue?',
+        { title: 'Forget Device', confirmText: 'Forget' }
+    )
+    if (ok) {
       clearDeviceCredentials()
-      setShowMenu(false)
     }
   }
 
   return (
-    <div className="app-layout">
-      {/* Uncomment if you have Phase 2+ components:
+      <div className="app-layout">
+        {/* Uncomment if you have Phase 2+ components:
       <OfflineIndicator />
       <UpdatePrompt />
       <InstallPrompt />
       */}
-      
-      <header className="app-header">
-        <div className="header-left">
-          <h1>🎯 GoalFlow</h1>
-        </div>
-        <div className="header-right">
-          <span className="user-email">{user.email}</span>
-          
-          <div className="header-menu-container">
-            <button 
-              className="btn btn-secondary btn-small menu-trigger"
-              onClick={() => setShowMenu(!showMenu)}
-              aria-label="Menu"
-            >
-              ☰
-            </button>
-            
-            {showMenu && (
-              <>
-                <div className="menu-backdrop" onClick={() => setShowMenu(false)} />
-                <div className="header-menu">
-                  {isRemembered && (
-                    <button className="menu-item" onClick={handleForgetDevice}>
-                      <span className="menu-icon">🔒</span>
-                      <span>Forget this device</span>
-                    </button>
-                  )}
-                  <button className="menu-item" onClick={handleSignOut}>
-                    <span className="menu-icon">🚪</span>
-                    <span>Sign out</span>
-                  </button>
-                </div>
-              </>
-            )}
+
+        <header className="app-header">
+          <div className="header-left">
+            <h1>🎯 GoalFlow</h1>
           </div>
-        </div>
-      </header>
+          <div className="header-right">
+            <span className="user-email">{user.email}</span>
 
-      <main className="app-main">
-        {children}
-      </main>
+            <div className="header-menu-container">
+              <button
+                  className="btn btn-secondary btn-small menu-trigger"
+                  onClick={() => setShowMenu(!showMenu)}
+                  aria-label="Menu"
+              >
+                ☰
+              </button>
 
-      <nav className="bottom-nav">
-        <NavLink to="/" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
-          <span className="nav-icon">📊</span>
-          <span className="nav-label">Today</span>
-        </NavLink>
-        <NavLink to="/history" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
-          <span className="nav-icon">📅</span>
-          <span className="nav-label">History</span>
-        </NavLink>
-        <NavLink to="/habits" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
-          <span className="nav-icon">⚙️</span>
-          <span className="nav-label">Habits</span>
-        </NavLink>
-      </nav>
-    </div>
+              {showMenu && (
+                  <>
+                    <div className="menu-backdrop" onClick={() => setShowMenu(false)} />
+                    <div className="header-menu">
+                      {isRemembered && (
+                          <button className="menu-item" onClick={handleForgetDevice}>
+                            <span className="menu-icon">🔒</span>
+                            <span>Forget this device</span>
+                          </button>
+                      )}
+                      <button className="menu-item" onClick={handleSignOut}>
+                        <span className="menu-icon">🚪</span>
+                        <span>Sign out</span>
+                      </button>
+                    </div>
+                  </>
+              )}
+            </div>
+          </div>
+        </header>
+
+        <main className="app-main">
+          {children}
+        </main>
+
+        <nav className="bottom-nav">
+          <NavLink to="/" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+            <span className="nav-icon">📊</span>
+            <span className="nav-label">Today</span>
+          </NavLink>
+          <NavLink to="/history" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+            <span className="nav-icon">📅</span>
+            <span className="nav-label">History</span>
+          </NavLink>
+          <NavLink to="/habits" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+            <span className="nav-icon">⚙️</span>
+            <span className="nav-label">Habits</span>
+          </NavLink>
+        </nav>
+      </div>
   )
 }

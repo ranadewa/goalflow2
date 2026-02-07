@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabase'
 import { encryptData } from '../lib/encryption'
 import useHabitsData from '../hooks/useHabitsData'
+import { useToast } from '../components/Toast'
+import { useConfirm } from '../components/ConfirmModal'
 import AddHabitModal from '../components/AddHabitModal'
 import EditHabitModal from '../components/EditHabitModal'
 
@@ -17,6 +19,8 @@ const CATEGORY_ICONS = ['❤️', '👥', '💼', '💰', '⭐', '🎯', '📚',
 
 export default function HabitsPage() {
   const { user, encryptionKey } = useAuth()
+  const toast = useToast()
+  const confirm = useConfirm()
   const {
     categories,
     setCategories,
@@ -88,9 +92,11 @@ export default function HabitsPage() {
   }
 
   async function handleDeleteHabit(habit) {
-    if (!confirm(`Delete "${habit.data.name}"? This cannot be undone.`)) {
-      return
-    }
+    const ok = await confirm(
+        `Delete "${habit.data.name}"? This cannot be undone.`,
+        { title: 'Delete Habit', confirmText: 'Delete', danger: true }
+    )
+    if (!ok) return
 
     try {
       const { error } = await supabase
@@ -103,7 +109,7 @@ export default function HabitsPage() {
       setHabits(habits.filter(h => h.id !== habit.id))
     } catch (err) {
       console.error('Error deleting habit:', err)
-      alert('Failed to delete habit: ' + err.message)
+      toast.error('Failed to delete habit: ' + err.message)
     }
   }
 
@@ -127,7 +133,7 @@ export default function HabitsPage() {
 
   async function handleSaveCategory() {
     if (!categoryName.trim()) {
-      alert('Please enter a category name')
+      toast.warning('Please enter a category name')
       return
     }
 
@@ -175,7 +181,7 @@ export default function HabitsPage() {
       setShowCategoryModal(false)
     } catch (err) {
       console.error('Error saving category:', err)
-      alert('Failed to save category: ' + err.message)
+      toast.error('Failed to save category: ' + err.message)
     } finally {
       setSavingCategory(false)
     }
@@ -188,9 +194,12 @@ export default function HabitsPage() {
         ? `Delete "${category.data.name}" and its ${categoryHabits.length} habit(s)? This cannot be undone.`
         : `Delete "${category.data.name}"? This cannot be undone.`
 
-    if (!confirm(message)) {
-      return
-    }
+    const ok = await confirm(message, {
+      title: 'Delete Category',
+      confirmText: 'Delete',
+      danger: true
+    })
+    if (!ok) return
 
     try {
       const { error } = await supabase
@@ -204,7 +213,7 @@ export default function HabitsPage() {
       setHabits(habits.filter(h => h.category_id !== category.id))
     } catch (err) {
       console.error('Error deleting category:', err)
-      alert('Failed to delete category: ' + err.message)
+      toast.error('Failed to delete category: ' + err.message)
     }
   }
 
