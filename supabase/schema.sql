@@ -61,18 +61,6 @@ CREATE TABLE reflections (
   UNIQUE(user_id, date)
 );
 
--- 5. REFLECTIONS
--- Daily gratitude and lessons learned
-CREATE TABLE reflections (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  date DATE NOT NULL,
-  data_encrypted TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(user_id, date)
-);
-
 -- =============================================
 -- ROW LEVEL SECURITY (RLS)
 -- Users can only access their own data
@@ -82,7 +70,6 @@ ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE habits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE completions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE reflections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reflections ENABLE ROW LEVEL SECURITY;
 
 -- Policies for user_settings

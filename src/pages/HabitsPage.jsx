@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabase'
-import { decryptData, encryptData } from '../lib/encryption'
+import { encryptData } from '../lib/encryption'
+import useHabitsData from '../hooks/useHabitsData'
 import AddHabitModal from '../components/AddHabitModal'
 import EditHabitModal from '../components/EditHabitModal'
 
@@ -16,11 +17,15 @@ const CATEGORY_ICONS = ['❤️', '👥', '💼', '💰', '⭐', '🎯', '📚',
 
 export default function HabitsPage() {
   const { user, encryptionKey } = useAuth()
-
-  const [categories, setCategories] = useState([])
-  const [habits, setHabits] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const {
+    categories,
+    setCategories,
+    habits,
+    setHabits,
+    loading,
+    error,
+    reload
+  } = useHabitsData()
 
   // Habit modal state
   const [showAddModal, setShowAddModal] = useState(false)
@@ -36,55 +41,6 @@ export default function HabitsPage() {
   const [categoryIcon, setCategoryIcon] = useState(CATEGORY_ICONS[0])
   const [savingCategory, setSavingCategory] = useState(false)
 
-  useEffect(() => {
-    loadData()
-  }, [])
-
-  async function loadData() {
-    setLoading(true)
-    setError(null)
-
-    try {
-      const { data: catData, error: catError } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('order_num')
-
-      if (catError) throw catError
-
-      const decryptedCategories = await Promise.all(
-        catData.map(async (cat) => ({
-          ...cat,
-          data: await decryptData(cat.data_encrypted, encryptionKey)
-        }))
-      )
-      setCategories(decryptedCategories)
-
-      const { data: habitData, error: habitError } = await supabase
-        .from('habits')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('active', true)
-
-      if (habitError) throw habitError
-
-      const decryptedHabits = await Promise.all(
-        (habitData || []).map(async (habit) => ({
-          ...habit,
-          data: await decryptData(habit.data_encrypted, encryptionKey)
-        }))
-      )
-      setHabits(decryptedHabits)
-
-    } catch (err) {
-      console.error('Error loading data:', err)
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   // ============ Habit Functions ============
 
   function handleAddHabit(categoryId) {
@@ -96,15 +52,15 @@ export default function HabitsPage() {
     const encrypted = await encryptData(habitData, encryptionKey)
 
     const { data, error } = await supabase
-      .from('habits')
-      .insert({
-        user_id: user.id,
-        category_id: selectedCategoryId,
-        active: true,
-        data_encrypted: encrypted
-      })
-      .select()
-      .single()
+        .from('habits')
+        .insert({
+          user_id: user.id,
+          category_id: selectedCategoryId,
+          active: true,
+          data_encrypted: encrypted
+        })
+        .select()
+        .single()
 
     if (error) throw error
 
@@ -120,14 +76,14 @@ export default function HabitsPage() {
     const encrypted = await encryptData(newData, encryptionKey)
 
     const { error } = await supabase
-      .from('habits')
-      .update({ data_encrypted: encrypted })
-      .eq('id', habit.id)
+        .from('habits')
+        .update({ data_encrypted: encrypted })
+        .eq('id', habit.id)
 
     if (error) throw error
 
-    setHabits(habits.map(h => 
-      h.id === habit.id ? { ...h, data: newData } : h
+    setHabits(habits.map(h =>
+        h.id === habit.id ? { ...h, data: newData } : h
     ))
   }
 
@@ -138,9 +94,9 @@ export default function HabitsPage() {
 
     try {
       const { error } = await supabase
-        .from('habits')
-        .delete()
-        .eq('id', habit.id)
+          .from('habits')
+          .delete()
+          .eq('id', habit.id)
 
       if (error) throw error
 
@@ -188,28 +144,28 @@ export default function HabitsPage() {
       if (editingCategory) {
         // Update existing
         const { error } = await supabase
-          .from('categories')
-          .update({ data_encrypted: encrypted })
-          .eq('id', editingCategory.id)
+            .from('categories')
+            .update({ data_encrypted: encrypted })
+            .eq('id', editingCategory.id)
 
         if (error) throw error
 
-        setCategories(categories.map(c => 
-          c.id === editingCategory.id ? { ...c, data: categoryData } : c
+        setCategories(categories.map(c =>
+            c.id === editingCategory.id ? { ...c, data: categoryData } : c
         ))
       } else {
         // Create new
         const maxOrder = categories.reduce((max, c) => Math.max(max, c.order_num), 0)
-        
+
         const { data, error } = await supabase
-          .from('categories')
-          .insert({
-            user_id: user.id,
-            order_num: maxOrder + 1,
-            data_encrypted: encrypted
-          })
-          .select()
-          .single()
+            .from('categories')
+            .insert({
+              user_id: user.id,
+              order_num: maxOrder + 1,
+              data_encrypted: encrypted
+            })
+            .select()
+            .single()
 
         if (error) throw error
 
@@ -227,10 +183,10 @@ export default function HabitsPage() {
 
   async function handleDeleteCategory(category) {
     const categoryHabits = habits.filter(h => h.category_id === category.id)
-    
+
     const message = categoryHabits.length > 0
-      ? `Delete "${category.data.name}" and its ${categoryHabits.length} habit(s)? This cannot be undone.`
-      : `Delete "${category.data.name}"? This cannot be undone.`
+        ? `Delete "${category.data.name}" and its ${categoryHabits.length} habit(s)? This cannot be undone.`
+        : `Delete "${category.data.name}"? This cannot be undone.`
 
     if (!confirm(message)) {
       return
@@ -238,9 +194,9 @@ export default function HabitsPage() {
 
     try {
       const { error } = await supabase
-        .from('categories')
-        .delete()
-        .eq('id', category.id)
+          .from('categories')
+          .delete()
+          .eq('id', category.id)
 
       if (error) throw error
 
@@ -265,215 +221,215 @@ export default function HabitsPage() {
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Loading habits...</p>
-      </div>
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Loading habits...</p>
+        </div>
     )
   }
 
   if (error) {
     return (
-      <div className="error-container">
-        <h2>Something went wrong</h2>
-        <p>{error}</p>
-        <button onClick={loadData} className="btn btn-primary">
-          Try Again
-        </button>
-      </div>
+        <div className="error-container">
+          <h2>Something went wrong</h2>
+          <p>{error}</p>
+          <button onClick={reload} className="btn btn-primary">
+            Try Again
+          </button>
+        </div>
     )
   }
 
   return (
-    <div className="habits-page">
-      <div className="page-header-bar">
-        <div>
-          <h2>Manage Habits</h2>
-          <p>Add, edit, or remove habits & categories</p>
+      <div className="habits-page">
+        <div className="page-header-bar">
+          <div>
+            <h2>Manage Habits</h2>
+            <p>Add, edit, or remove habits & categories</p>
+          </div>
+          <button className="btn btn-primary btn-small" onClick={openAddCategory}>
+            + Category
+          </button>
         </div>
-        <button className="btn btn-primary btn-small" onClick={openAddCategory}>
-          + Category
-        </button>
-      </div>
 
-      <div className="habits-list">
-        {categories.map(category => {
-          const categoryHabits = habits.filter(h => h.category_id === category.id)
+        <div className="habits-list">
+          {categories.map(category => {
+            const categoryHabits = habits.filter(h => h.category_id === category.id)
 
-          return (
-            <div key={category.id} className="habits-category">
-              <div 
-                className="habits-category-header"
-                style={{ borderLeftColor: category.data.color }}
-              >
-                <div className="category-header-left">
-                  <span className="category-icon">{category.data.icon}</span>
-                  <span className="category-name">{category.data.name}</span>
-                  <span className="category-count">{categoryHabits.length}</span>
-                </div>
-                <div className="category-header-actions">
-                  <button 
-                    className="btn-icon-small"
-                    onClick={() => openEditCategory(category)}
-                    title="Edit category"
+            return (
+                <div key={category.id} className="habits-category">
+                  <div
+                      className="habits-category-header"
+                      style={{ borderLeftColor: category.data.color }}
                   >
-                    ✏️
-                  </button>
-                  <button 
-                    className="btn-icon-small danger"
-                    onClick={() => handleDeleteCategory(category)}
-                    title="Delete category"
-                  >
-                    🗑️
-                  </button>
-                </div>
-              </div>
-
-              <div className="habits-category-list">
-                {categoryHabits.length === 0 ? (
-                  <p className="no-habits">No habits in this category</p>
-                ) : (
-                  categoryHabits.map(habit => (
-                    <div key={habit.id} className="habit-item">
-                      <div className="habit-item-info">
-                        <span className="habit-item-name">{habit.data.name}</span>
-                        <span className="habit-item-points">{habit.data.points} pts</span>
-                      </div>
-                      <div className="habit-item-actions">
-                        <button 
-                          className="btn-icon"
-                          onClick={() => handleEditHabit(habit)}
-                          title="Edit"
-                        >
-                          ✏️
-                        </button>
-                        <button 
-                          className="btn-icon danger"
-                          onClick={() => handleDeleteHabit(habit)}
-                          title="Delete"
-                        >
-                          🗑️
-                        </button>
-                      </div>
+                    <div className="category-header-left">
+                      <span className="category-icon">{category.data.icon}</span>
+                      <span className="category-name">{category.data.name}</span>
+                      <span className="category-count">{categoryHabits.length}</span>
                     </div>
-                  ))
-                )}
+                    <div className="category-header-actions">
+                      <button
+                          className="btn-icon-small"
+                          onClick={() => openEditCategory(category)}
+                          title="Edit category"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                          className="btn-icon-small danger"
+                          onClick={() => handleDeleteCategory(category)}
+                          title="Delete category"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
 
-                <button 
-                  className="add-habit-btn"
-                  onClick={() => handleAddHabit(category.id)}
-                >
-                  + Add habit to {category.data.name}
-                </button>
+                  <div className="habits-category-list">
+                    {categoryHabits.length === 0 ? (
+                        <p className="no-habits">No habits in this category</p>
+                    ) : (
+                        categoryHabits.map(habit => (
+                            <div key={habit.id} className="habit-item">
+                              <div className="habit-item-info">
+                                <span className="habit-item-name">{habit.data.name}</span>
+                                <span className="habit-item-points">{habit.data.points} pts</span>
+                              </div>
+                              <div className="habit-item-actions">
+                                <button
+                                    className="btn-icon"
+                                    onClick={() => handleEditHabit(habit)}
+                                    title="Edit"
+                                >
+                                  ✏️
+                                </button>
+                                <button
+                                    className="btn-icon danger"
+                                    onClick={() => handleDeleteHabit(habit)}
+                                    title="Delete"
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            </div>
+                        ))
+                    )}
+
+                    <button
+                        className="add-habit-btn"
+                        onClick={() => handleAddHabit(category.id)}
+                    >
+                      + Add habit to {category.data.name}
+                    </button>
+                  </div>
+                </div>
+            )
+          })}
+
+          {categories.length === 0 && (
+              <div className="empty-state">
+                <p>📁 No categories yet!</p>
+                <p>Click "+ Category" to create one.</p>
+              </div>
+          )}
+        </div>
+
+        {/* Add Habit Modal */}
+        <AddHabitModal
+            isOpen={showAddModal}
+            onClose={closeModal}
+            onAdd={handleCreateHabit}
+            categoryName={selectedCategory?.data?.name || ''}
+        />
+
+        {/* Edit Habit Modal */}
+        <EditHabitModal
+            isOpen={showEditModal}
+            onClose={closeModal}
+            onSave={handleSaveHabit}
+            habit={selectedHabit}
+        />
+
+        {/* Category Modal */}
+        {showCategoryModal && (
+            <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && closeModal()}>
+              <div className="modal">
+                <div className="modal-header">
+                  <h2>{editingCategory ? 'Edit Category' : 'Add Category'}</h2>
+                  <button className="modal-close" onClick={closeModal}>×</button>
+                </div>
+
+                <div className="modal-body">
+                  <div className="form-group">
+                    <label htmlFor="categoryName">Name</label>
+                    <input
+                        id="categoryName"
+                        type="text"
+                        value={categoryName}
+                        onChange={(e) => setCategoryName(e.target.value)}
+                        placeholder="e.g., Health, Learning"
+                        autoFocus
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Icon</label>
+                    <div className="icon-picker">
+                      {CATEGORY_ICONS.map(icon => (
+                          <button
+                              key={icon}
+                              type="button"
+                              className={`icon-option ${categoryIcon === icon ? 'selected' : ''}`}
+                              onClick={() => setCategoryIcon(icon)}
+                          >
+                            {icon}
+                          </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Color</label>
+                    <div className="color-picker">
+                      {CATEGORY_COLORS.map(color => (
+                          <button
+                              key={color}
+                              type="button"
+                              className={`color-option ${categoryColor === color ? 'selected' : ''}`}
+                              style={{ background: color }}
+                              onClick={() => setCategoryColor(color)}
+                          />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="category-preview">
+                    <span>Preview:</span>
+                    <div
+                        className="preview-category"
+                        style={{ borderLeftColor: categoryColor }}
+                    >
+                      <span>{categoryIcon}</span>
+                      <span>{categoryName || 'Category Name'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={closeModal}>
+                    Cancel
+                  </button>
+                  <button
+                      className="btn btn-primary"
+                      onClick={handleSaveCategory}
+                      disabled={savingCategory || !categoryName.trim()}
+                  >
+                    {savingCategory ? 'Saving...' : (editingCategory ? 'Save Changes' : 'Add Category')}
+                  </button>
+                </div>
               </div>
             </div>
-          )
-        })}
-
-        {categories.length === 0 && (
-          <div className="empty-state">
-            <p>📁 No categories yet!</p>
-            <p>Click "+ Category" to create one.</p>
-          </div>
         )}
       </div>
-
-      {/* Add Habit Modal */}
-      <AddHabitModal
-        isOpen={showAddModal}
-        onClose={closeModal}
-        onAdd={handleCreateHabit}
-        categoryName={selectedCategory?.data?.name || ''}
-      />
-
-      {/* Edit Habit Modal */}
-      <EditHabitModal
-        isOpen={showEditModal}
-        onClose={closeModal}
-        onSave={handleSaveHabit}
-        habit={selectedHabit}
-      />
-
-      {/* Category Modal */}
-      {showCategoryModal && (
-        <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && closeModal()}>
-          <div className="modal">
-            <div className="modal-header">
-              <h2>{editingCategory ? 'Edit Category' : 'Add Category'}</h2>
-              <button className="modal-close" onClick={closeModal}>×</button>
-            </div>
-
-            <div className="modal-body">
-              <div className="form-group">
-                <label htmlFor="categoryName">Name</label>
-                <input
-                  id="categoryName"
-                  type="text"
-                  value={categoryName}
-                  onChange={(e) => setCategoryName(e.target.value)}
-                  placeholder="e.g., Health, Learning"
-                  autoFocus
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Icon</label>
-                <div className="icon-picker">
-                  {CATEGORY_ICONS.map(icon => (
-                    <button
-                      key={icon}
-                      type="button"
-                      className={`icon-option ${categoryIcon === icon ? 'selected' : ''}`}
-                      onClick={() => setCategoryIcon(icon)}
-                    >
-                      {icon}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>Color</label>
-                <div className="color-picker">
-                  {CATEGORY_COLORS.map(color => (
-                    <button
-                      key={color}
-                      type="button"
-                      className={`color-option ${categoryColor === color ? 'selected' : ''}`}
-                      style={{ background: color }}
-                      onClick={() => setCategoryColor(color)}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="category-preview">
-                <span>Preview:</span>
-                <div 
-                  className="preview-category"
-                  style={{ borderLeftColor: categoryColor }}
-                >
-                  <span>{categoryIcon}</span>
-                  <span>{categoryName || 'Category Name'}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={closeModal}>
-                Cancel
-              </button>
-              <button 
-                className="btn btn-primary"
-                onClick={handleSaveCategory}
-                disabled={savingCategory || !categoryName.trim()}
-              >
-                {savingCategory ? 'Saving...' : (editingCategory ? 'Save Changes' : 'Add Category')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
   )
 }
