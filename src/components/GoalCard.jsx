@@ -6,6 +6,7 @@ import { CHILD_TYPE, TYPE_LABELS, computeProgress } from '../hooks/useGoals'
  *
  * Collapsed: goal name + overall progress percentage
  * Expanded: current focus (quarterly/monthly) + weekly tasks with checkboxes
+ *           + range target bars + implementation intention text
  *
  * Props:
  *   goal       - yearly goal node from goalTree (has .children, .computedProgress, .currentFocus)
@@ -34,7 +35,7 @@ export default function GoalCard({ goal, onAddChild, onEdit, onDelete, onToggle 
           </span>
                     <div className="goal-card-title-area">
                         <h3 className="goal-card-title">{goal.data?.name || 'Untitled Goal'}</h3>
-                        {goal.data?.description && (
+                        {goal.data?.description && !expanded && (
                             <p className="goal-card-description">{goal.data.description}</p>
                         )}
                     </div>
@@ -60,6 +61,20 @@ export default function GoalCard({ goal, onAddChild, onEdit, onDelete, onToggle 
             {/* Expanded content */}
             {expanded && (
                 <div className="goal-card-body">
+                    {/* Description (shown only when expanded) */}
+                    {goal.data?.description && (
+                        <p className="goal-card-description expanded">{goal.data.description}</p>
+                    )}
+
+                    {/* Range target bar for this goal */}
+                    {(goal.target_min || goal.target_max) && (
+                        <RangeTargetBar
+                            targetMin={goal.target_min}
+                            targetMax={goal.target_max}
+                            progress={progress}
+                        />
+                    )}
+
                     {/* Current Focus section */}
                     {focus && (
                         <div className="goal-focus-section">
@@ -72,18 +87,41 @@ export default function GoalCard({ goal, onAddChild, onEdit, onDelete, onToggle 
                   </span>
                                 </div>
                                 <div className="goal-focus-name">{focus.data?.name}</div>
-                                <div className="goal-progress-bar">
-                                    <div
-                                        className="goal-progress-bar-fill"
-                                        style={{ width: `${focus.computedProgress || computeProgress(focus)}%` }}
+
+                                {/* Focus range target */}
+                                {(focus.target_min || focus.target_max) && (
+                                    <RangeTargetBar
+                                        targetMin={focus.target_min}
+                                        targetMax={focus.target_max}
+                                        progress={focus.computedProgress || computeProgress(focus)}
                                     />
-                                </div>
+                                )}
+
+                                {/* Plain progress bar when no range target */}
+                                {!focus.target_min && !focus.target_max && (
+                                    <div className="goal-progress-bar">
+                                        <div
+                                            className="goal-progress-bar-fill"
+                                            style={{ width: `${focus.computedProgress || computeProgress(focus)}%` }}
+                                        />
+                                    </div>
+                                )}
 
                                 {/* Weekly tasks under current focus */}
                                 {focus.children && focus.children.length > 0 && (
                                     <div className="goal-weekly-tasks">
                                         {focus.children.map(child => (
-                                            <WeeklyTaskItem key={child.id} task={child} children={child.children} onToggle={onToggle} />
+                                            <div key={child.id}>
+                                                <WeeklyTaskItem task={child} onToggle={onToggle} />
+                                                {/* Leaf weekly tasks under monthly children */}
+                                                {child.children && child.children.length > 0 && (
+                                                    <div className="goal-weekly-tasks nested">
+                                                        {child.children.map(leaf => (
+                                                            <WeeklyTaskItem key={leaf.id} task={leaf} onToggle={onToggle} />
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
                                         ))}
                                     </div>
                                 )}
@@ -201,6 +239,67 @@ export default function GoalCard({ goal, onAddChild, onEdit, onDelete, onToggle 
 }
 
 /**
+ * RangeTargetBar - Visual progress bar with min/max markers.
+ *
+ * Green fill to target_min, gold extension to target_max.
+ * Status text: below min = "X more to go", at min = "✓ Goal met", at max = "🌟 Stretch hit"
+ */
+function RangeTargetBar({ targetMin, targetMax, progress }) {
+    const min = targetMin || 0
+    const max = targetMax || min
+    const ceiling = max > min ? max : min
+    if (ceiling <= 0) return null
+
+    // progress is 0-100 percentage; convert to "units" relative to ceiling
+    const currentUnits = Math.round((progress / 100) * ceiling)
+    const minPct = ceiling > 0 ? (min / ceiling) * 100 : 100
+    const currentPct = Math.min(100, ceiling > 0 ? (currentUnits / ceiling) * 100 : 0)
+    const metMin = currentUnits >= min
+    const metMax = max > min && currentUnits >= max
+
+    let statusText, statusClass
+    if (metMax) {
+        statusText = '🌟 Stretch hit!'
+        statusClass = 'stretch'
+    } else if (metMin) {
+        statusText = '✓ Goal met'
+        statusClass = 'met'
+    } else {
+        statusText = `${min - currentUnits} more to go`
+        statusClass = 'pending'
+    }
+
+    return (
+        <div className="goal-range-bar">
+            <div className="goal-range-track">
+                {/* Min marker line */}
+                {max > min && (
+                    <div className="goal-range-min-marker" style={{ left: `${minPct}%` }} />
+                )}
+                {/* Green fill up to min */}
+                <div
+                    className={`goal-range-fill-min ${metMin ? 'filled' : ''}`}
+                    style={{ width: `${Math.min(currentPct, minPct)}%` }}
+                />
+                {/* Gold fill from min to max */}
+                {max > min && currentPct > minPct && (
+                    <div
+                        className={`goal-range-fill-max ${metMax ? 'filled' : ''}`}
+                        style={{
+                            left: `${minPct}%`,
+                            width: `${Math.min(currentPct - minPct, 100 - minPct)}%`
+                        }}
+                    />
+                )}
+            </div>
+            <div className={`goal-range-status ${statusClass}`}>
+                {statusText}
+            </div>
+        </div>
+    )
+}
+
+/**
  * MilestoneItem - A quarterly/monthly child shown in the "all milestones" list
  */
 function MilestoneItem({ milestone, onToggle, onAddChild, isCurrent }) {
@@ -226,15 +325,25 @@ function MilestoneItem({ milestone, onToggle, onAddChild, isCurrent }) {
                     </button>
                 </div>
             </div>
-            <div className="goal-progress-bar small">
-                <div className="goal-progress-bar-fill" style={{ width: `${progress}%` }} />
-            </div>
+
+            {/* Range or plain progress bar */}
+            {(milestone.target_min || milestone.target_max) ? (
+                <RangeTargetBar
+                    targetMin={milestone.target_min}
+                    targetMax={milestone.target_max}
+                    progress={progress}
+                />
+            ) : (
+                <div className="goal-progress-bar small">
+                    <div className="goal-progress-bar-fill" style={{ width: `${progress}%` }} />
+                </div>
+            )}
 
             {/* Show children (weekly tasks) */}
             {milestone.children && milestone.children.length > 0 && (
                 <div className="goal-weekly-tasks nested">
                     {milestone.children.map(child => (
-                        <WeeklyTaskItem key={child.id} task={child} children={child.children} onToggle={onToggle} />
+                        <WeeklyTaskItem key={child.id} task={child} onToggle={onToggle} />
                     ))}
                 </div>
             )}
@@ -253,9 +362,27 @@ function MilestoneItem({ milestone, onToggle, onAddChild, isCurrent }) {
 
 /**
  * WeeklyTaskItem - A leaf-level weekly task with checkbox
+ * Shows implementation intention and range target status
  */
 function WeeklyTaskItem({ task, onToggle }) {
     const isCompleted = task.status === 'completed'
+    const hasIntention = task.data?.intention_when || task.data?.intention_where
+    const hasTargets = task.target_min || task.target_max
+
+    // Range target status for weekly tasks
+    let targetStatus = null
+    if (hasTargets) {
+        const min = task.target_min || 0
+        const max = task.target_max || min
+        // For weekly tasks, progress is manual or 0/100 from completed status
+        const current = isCompleted ? max : (task.data?.progress || 0)
+        const metMin = current >= min
+        const metMax = max > min && current >= max
+
+        if (metMax) targetStatus = { text: '🌟', cls: 'stretch' }
+        else if (metMin) targetStatus = { text: '✓', cls: 'met' }
+        else targetStatus = { text: `${current}/${min}`, cls: 'pending' }
+    }
 
     return (
         <div
@@ -267,15 +394,17 @@ function WeeklyTaskItem({ task, onToggle }) {
       </span>
             <div className="goal-task-info">
                 <span className="goal-task-name">{task.data?.name}</span>
-                {task.data?.intention_when && task.data?.intention_where && (
+                {hasIntention && (
                     <span className="goal-task-intention">
-            {task.data.intention_when} · {task.data.intention_where}
+            {task.data.intention_when && task.data.intention_where
+                ? `${task.data.intention_when} · ${task.data.intention_where}`
+                : task.data.intention_when || task.data.intention_where}
           </span>
                 )}
             </div>
-            {(task.target_min || task.target_max) && (
-                <span className="goal-task-target">
-          {task.target_min}{task.target_max && task.target_max !== task.target_min ? `–${task.target_max}` : ''}×
+            {targetStatus && (
+                <span className={`goal-task-target-badge ${targetStatus.cls}`}>
+          {targetStatus.text}
         </span>
             )}
         </div>

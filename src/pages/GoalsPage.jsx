@@ -1,22 +1,24 @@
 import { useState } from 'react'
-import { useAuth } from '../context/AuthContext'
 import { useToast } from '../components/Toast'
 import { useConfirm } from '../components/ConfirmModal'
 import useGoals, { CHILD_TYPE, TYPE_LABELS } from '../hooks/useGoals'
+import useHabitsData from '../hooks/useHabitsData'
 import GoalCard from '../components/GoalCard'
+import GoalFormModal from '../components/GoalFormModal'
 
 /**
  * GoalsPage - Main page for the Goals tab.
  *
  * Displays yearly goals as expandable cards with three-layer drill-down.
- * Includes a creation modal for adding new goals at any level.
+ * Uses GoalFormModal for creating/editing goals with implementation
+ * intentions, range targets, and linked habits.
  */
 export default function GoalsPage() {
-    const { user } = useAuth()
     const toast = useToast()
     const confirm = useConfirm()
     const {
         goalTree,
+        goals,
         loading,
         error,
         reload,
@@ -26,17 +28,17 @@ export default function GoalsPage() {
         toggleGoalStatus
     } = useGoals()
 
+    const {
+        habits,
+        loading: habitsLoading
+    } = useHabitsData()
+
     // Modal state
     const [showModal, setShowModal] = useState(false)
-    const [modalMode, setModalMode] = useState('create') // 'create' or 'edit'
+    const [modalMode, setModalMode] = useState('create')
     const [editingGoal, setEditingGoal] = useState(null)
     const [modalParentId, setModalParentId] = useState(null)
     const [modalGoalType, setModalGoalType] = useState('yearly')
-
-    // Form state
-    const [formName, setFormName] = useState('')
-    const [formDescription, setFormDescription] = useState('')
-    const [saving, setSaving] = useState(false)
 
     // Filter: show archived goals
     const [showArchived, setShowArchived] = useState(false)
@@ -48,8 +50,6 @@ export default function GoalsPage() {
         setEditingGoal(null)
         setModalParentId(parentId)
         setModalGoalType(goalType)
-        setFormName('')
-        setFormDescription('')
         setShowModal(true)
     }
 
@@ -58,48 +58,28 @@ export default function GoalsPage() {
         setEditingGoal(goal)
         setModalParentId(goal.parent_id)
         setModalGoalType(goal.goal_type)
-        setFormName(goal.data?.name || '')
-        setFormDescription(goal.data?.description || '')
         setShowModal(true)
     }
 
     function closeModal() {
         setShowModal(false)
         setEditingGoal(null)
-        setFormName('')
-        setFormDescription('')
     }
 
-    async function handleSave() {
-        if (!formName.trim()) {
-            toast.warning('Please enter a goal name')
-            return
-        }
-
-        setSaving(true)
-
-        try {
-            if (modalMode === 'edit' && editingGoal) {
-                await updateGoal(editingGoal.id, {
-                    name: formName.trim(),
-                    description: formDescription.trim()
-                })
-                toast.success('Goal updated')
-            } else {
-                await createGoal({
-                    goal_type: modalGoalType,
-                    parent_id: modalParentId,
-                    name: formName.trim(),
-                    description: formDescription.trim()
-                })
-                toast.success(`${TYPE_LABELS[modalGoalType]} created`)
-            }
-            closeModal()
-        } catch (err) {
-            console.error('Error saving goal:', err)
-            toast.error('Failed to save: ' + err.message)
-        } finally {
-            setSaving(false)
+    /**
+     * Unified save handler called by GoalFormModal.
+     * Routes to createGoal or updateGoal based on mode.
+     */
+    async function handleModalSave(goalData, existingGoal) {
+        if (existingGoal) {
+            // Edit mode — separate encrypted fields from plain fields
+            const { goal_type, parent_id, ...updates } = goalData
+            await updateGoal(existingGoal.id, updates)
+            toast.success('Goal updated')
+        } else {
+            // Create mode
+            await createGoal(goalData)
+            toast.success(`${TYPE_LABELS[goalData.goal_type]} created`)
         }
     }
 
@@ -246,78 +226,17 @@ export default function GoalsPage() {
                 </div>
             )}
 
-            {/* Create/Edit Modal */}
-            {showModal && (
-                <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && closeModal()}>
-                    <div className="modal">
-                        <div className="modal-header">
-                            <h2>
-                                {modalMode === 'edit'
-                                    ? `Edit ${TYPE_LABELS[modalGoalType]}`
-                                    : `New ${TYPE_LABELS[modalGoalType]}`}
-                            </h2>
-                            <button className="modal-close" onClick={closeModal}>×</button>
-                        </div>
-
-                        <div className="modal-body">
-                            <div className="form-group">
-                                <label htmlFor="goalName">
-                                    {modalGoalType === 'yearly' ? "What's your big goal for the year?" : 'Name'}
-                                </label>
-                                <input
-                                    id="goalName"
-                                    type="text"
-                                    value={formName}
-                                    onChange={(e) => setFormName(e.target.value)}
-                                    placeholder={
-                                        modalGoalType === 'yearly' ? 'e.g., Run a marathon'
-                                            : modalGoalType === 'quarterly' ? 'e.g., Complete half-marathon training'
-                                                : modalGoalType === 'monthly' ? 'e.g., Run 80km this month'
-                                                    : 'e.g., Run 3 times this week'
-                                    }
-                                    autoFocus
-                                    onKeyDown={(e) => e.key === 'Enter' && !saving && handleSave()}
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor="goalDescription">Description (optional)</label>
-                                <input
-                                    id="goalDescription"
-                                    type="text"
-                                    value={formDescription}
-                                    onChange={(e) => setFormDescription(e.target.value)}
-                                    placeholder="One sentence to stay focused"
-                                />
-                            </div>
-
-                            {modalGoalType !== 'yearly' && (
-                                <div className="goal-modal-context">
-                                    <span className="goal-modal-type-badge">{TYPE_LABELS[modalGoalType]}</span>
-                                    <span className="goal-modal-hint">
-                    {modalGoalType === 'quarterly' && 'A milestone toward your yearly goal'}
-                                        {modalGoalType === 'monthly' && 'A concrete target for this month'}
-                                        {modalGoalType === 'weekly' && 'A specific action for this week'}
-                  </span>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="modal-footer">
-                            <button className="btn btn-secondary" onClick={closeModal}>
-                                Cancel
-                            </button>
-                            <button
-                                className="btn btn-primary"
-                                onClick={handleSave}
-                                disabled={saving || !formName.trim()}
-                            >
-                                {saving ? 'Saving...' : (modalMode === 'edit' ? 'Save Changes' : 'Create')}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Goal Form Modal */}
+            <GoalFormModal
+                isOpen={showModal}
+                onClose={closeModal}
+                onSave={handleModalSave}
+                mode={modalMode}
+                goalType={modalGoalType}
+                editingGoal={editingGoal}
+                parentId={modalParentId}
+                habits={habits}
+            />
         </div>
     )
 }

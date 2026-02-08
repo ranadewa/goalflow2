@@ -3724,3 +3724,359 @@ textarea,
     font-size: 10px;
   }
 }
+/* =============================================
+   GOALS PHASE 2 STYLES
+   Append to goals.css or index.css
+   ============================================= */
+
+/* ==================== */
+/* Goal Form Modal      */
+/* ==================== */
+
+.goal-form-modal {
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.form-optional {
+  font-weight: 400;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+/* Toggle buttons to reveal optional sections */
+.goal-form-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  background: none;
+  color: #6b7280;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 12px;
+}
+
+.goal-form-toggle:hover {
+  border-color: #6366f1;
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.03);
+}
+
+.goal-form-toggle-icon {
+  font-size: 16px;
+}
+
+/* Expandable form sections */
+.goal-form-section {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.goal-form-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.goal-form-section-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.goal-form-section-close {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  color: #9ca3af;
+  font-size: 18px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.goal-form-section-close:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* Two-column row for when/where and min/max */
+.goal-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.goal-form-row .form-group {
+  margin-bottom: 8px;
+}
+
+.goal-form-row .form-group label {
+  font-size: 13px;
+}
+
+.goal-form-row .form-group input {
+  padding: 10px;
+  font-size: 14px;
+}
+
+/* Select dropdown */
+.goal-form-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #374151;
+  background: white;
+  cursor: pointer;
+  appearance: auto;
+}
+
+.goal-form-select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.goal-form-hint {
+  font-size: 12px;
+  color: #6366f1;
+  margin-top: 4px;
+}
+
+/* ==================== */
+/* Intention Preview    */
+/* ==================== */
+
+.goal-intention-preview {
+  margin-top: 8px;
+  padding: 10px 14px;
+  background: #eff6ff;
+  border-radius: 6px;
+  border-left: 3px solid #6366f1;
+  font-size: 14px;
+  color: #374151;
+  font-style: italic;
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.goal-intention-quote {
+  font-size: 20px;
+  line-height: 1;
+  color: #a5b4fc;
+  font-style: normal;
+}
+
+.goal-intention-text {
+  flex: 1;
+  line-height: 1.5;
+}
+
+/* ==================== */
+/* Target Preview       */
+/* ==================== */
+
+.goal-target-preview {
+  margin-top: 10px;
+}
+
+.goal-target-bar {
+  position: relative;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.goal-target-bar-bg {
+  position: absolute;
+  inset: 0;
+  background: #e5e7eb;
+  border-radius: 5px;
+}
+
+.goal-target-bar-min {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: #10b981;
+  border-radius: 5px 0 0 5px;
+  z-index: 1;
+}
+
+.goal-target-bar-max {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: #fbbf24;
+  border-radius: 5px;
+  opacity: 0.4;
+  z-index: 0;
+}
+
+.goal-target-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.goal-target-label-min {
+  font-size: 12px;
+  color: #10b981;
+  font-weight: 500;
+}
+
+.goal-target-label-max {
+  font-size: 12px;
+  color: #d97706;
+  font-weight: 500;
+}
+
+/* ==================== */
+/* Range Target Bar     */
+/* (in GoalCard)        */
+/* ==================== */
+
+.goal-range-bar {
+  margin: 8px 0;
+}
+
+.goal-range-track {
+  position: relative;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: visible;
+}
+
+.goal-range-min-marker {
+  position: absolute;
+  top: -2px;
+  width: 2px;
+  height: 12px;
+  background: #374151;
+  border-radius: 1px;
+  z-index: 3;
+  transform: translateX(-1px);
+}
+
+.goal-range-fill-min {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: #d1d5db;
+  border-radius: 4px 0 0 4px;
+  z-index: 1;
+  transition: width 0.3s ease;
+}
+
+.goal-range-fill-min.filled {
+  background: #10b981;
+}
+
+.goal-range-fill-max {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: #fde68a;
+  z-index: 1;
+  transition: width 0.3s ease;
+}
+
+.goal-range-fill-max.filled {
+  background: #f59e0b;
+}
+
+.goal-range-status {
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.goal-range-status.pending {
+  color: #6b7280;
+}
+
+.goal-range-status.met {
+  color: #10b981;
+}
+
+.goal-range-status.stretch {
+  color: #d97706;
+}
+
+/* ==================== */
+/* Weekly Task Badges   */
+/* ==================== */
+
+.goal-task-target-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.goal-task-target-badge.pending {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.goal-task-target-badge.met {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.goal-task-target-badge.stretch {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+/* ==================== */
+/* Expanded description */
+/* ==================== */
+
+.goal-card-description.expanded {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+/* ==================== */
+/* Responsive           */
+/* ==================== */
+
+@media (max-width: 480px) {
+  .goal-form-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .goal-form-modal {
+    max-height: 90vh;
+  }
+
+  .goal-intention-preview {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+}
