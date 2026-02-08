@@ -84,13 +84,17 @@ export default function Layout({ children }) {
         </main>
 
         <nav className="bottom-nav">
-          <NavLink to="/" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+          <NavLink to="/" end className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
             <span className="nav-icon">📊</span>
             <span className="nav-label">Today</span>
           </NavLink>
           <NavLink to="/history" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
             <span className="nav-icon">📅</span>
             <span className="nav-label">History</span>
+          </NavLink>
+          <NavLink to="/goals" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+            <span className="nav-icon">🏔️</span>
+            <span className="nav-label">Goals</span>
           </NavLink>
           <NavLink to="/habits" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
             <span className="nav-icon">⚙️</span>

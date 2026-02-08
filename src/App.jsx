@@ -10,6 +10,7 @@ import UnlockPage from './pages/UnlockPage'
 import DashboardPage from './pages/DashboardPage'
 import HabitsPage from './pages/HabitsPage'
 import HistoryPage from './pages/HistoryPage'
+import GoalsPage from './pages/GoalsPage'
 import Layout from './components/Layout'
 
 function AppRoutes() {
@@ -56,15 +57,18 @@ function AppRoutes() {
         )
     }
 
-    // Fully authenticated - each page wrapped in ErrorBoundary for decryption safety
+    // Fully authenticated - wrap decryption pages in error boundary
     return (
         <Layout>
-            <Routes>
-                <Route path="/" element={<ErrorBoundary><DashboardPage /></ErrorBoundary>} />
-                <Route path="/history" element={<ErrorBoundary><HistoryPage /></ErrorBoundary>} />
-                <Route path="/habits" element={<ErrorBoundary><HabitsPage /></ErrorBoundary>} />
-                <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
+            <ErrorBoundary>
+                <Routes>
+                    <Route path="/" element={<DashboardPage />} />
+                    <Route path="/history" element={<HistoryPage />} />
+                    <Route path="/goals" element={<GoalsPage />} />
+                    <Route path="/habits" element={<HabitsPage />} />
+                    <Route path="*" element={<Navigate to="/" />} />
+                </Routes>
+            </ErrorBoundary>
         </Layout>
     )
 }
